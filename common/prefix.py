@@ -14,9 +14,11 @@ class OpenpilotPrefix:
     self.msgq_path = os.path.join(Paths.shm_path(), self.prefix)
     self.clean_dirs_on_exit = clean_dirs_on_exit
     self.shared_download_cache = shared_download_cache
+    self.original_comma_cache = None
 
   def __enter__(self):
     self.original_prefix = os.environ.get('OPENPILOT_PREFIX', None)
+    self.original_comma_cache = os.environ.get('COMMA_CACHE', None)
     os.environ['OPENPILOT_PREFIX'] = self.prefix
     try:
       os.mkdir(self.msgq_path)
@@ -38,6 +40,12 @@ class OpenpilotPrefix:
         os.environ['OPENPILOT_PREFIX'] = self.original_prefix
     except KeyError:
       pass
+
+    if self.shared_download_cache:
+      if self.original_comma_cache is not None:
+        os.environ['COMMA_CACHE'] = self.original_comma_cache
+      else:
+        os.environ.pop('COMMA_CACHE', None)
     return False
 
   def clean_dirs(self):
